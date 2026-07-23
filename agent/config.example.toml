@@ -60,6 +60,9 @@ approval_timeout_secs = 3600       # refund approvals can wait for a human
 
 # ── SOPs ──────────────────────────────────────────────────────────────
 [sop]
+# NOTE: resolved relative to the daemon's working directory, not the install
+# root — use an absolute path (e.g. /home/you/.zeroclaw/shared/sops) so cron
+# triggers fire no matter where the daemon starts. Verified on v0.8.3.
 sops_dir = "shared/sops"
 default_execution_mode = "supervised"
 approval_timeout_secs = 3600
