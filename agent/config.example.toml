@@ -1,0 +1,73 @@
+# rigpay ZeroClaw agent — merge into ~/.zeroclaw/config.toml
+#
+# Verified against ZeroClaw master (schema_version 3). Secrets are placeholders;
+# prefer env overrides (ZEROCLAW_channels__telegram__default__bot_token=...) or
+# the encrypted secrets store over inline values.
+#
+# Least-privilege posture, stated once here and enforced below:
+#   - the agent can reach ONLY the local rigpay gateway over HTTP
+#   - web_fetch is disabled outright
+#   - the agent holds no keys and no RPC access — the gateway owns the chain
+
+schema_version = 3
+
+# ── Model ─────────────────────────────────────────────────────────────
+[providers.models.anthropic.default]
+api_key = "REPLACE_OR_USE_ENV"
+model = "claude-sonnet-5"
+
+# ── Risk profile ──────────────────────────────────────────────────────
+# supervised: medium-risk actions require approval in-channel. The agent's
+# only tool surface is http_request to the local gateway, but the profile is
+# belt-and-suspenders, not the primary control.
+[risk_profiles.operator]
+level = "supervised"
+require_approval_for_medium_risk = true
+block_high_risk_commands = true
+excluded_tools = ["shell"]
+
+# ── Memory ────────────────────────────────────────────────────────────
+[memory]
+backend = "sqlite.default"
+auto_save = true
+search_mode = "bm25"
+
+# ── Tools: least privilege ────────────────────────────────────────────
+# The gateway is a private host (127.0.0.1), which ZeroClaw blocks by default
+# for SSRF safety — allow exactly that one host, nothing else.
+[http_request]
+enabled = true
+allowed_domains = ["127.0.0.1"]
+allow_private_hosts = false
+allowed_private_hosts = ["127.0.0.1"]
+max_response_size = 100000
+timeout_secs = 15
+
+[web_fetch]
+enabled = false
+
+# ── Channels ──────────────────────────────────────────────────────────
+[channels.telegram.default]
+enabled = true
+bot_token = "REPLACE_OR_USE_ENV"   # from @BotFather
+mention_only = false
+approval_timeout_secs = 3600       # refund approvals can wait for a human
+
+# ── Skills ────────────────────────────────────────────────────────────
+[skill_bundles.rigpay]
+# defaults to <install>/shared/skills/rigpay — copy this repo's
+# agent/shared/skills/rigpay there.
+
+# ── SOPs ──────────────────────────────────────────────────────────────
+[sop]
+sops_dir = "shared/sops"
+default_execution_mode = "supervised"
+approval_timeout_secs = 3600
+maintenance_interval_secs = 60
+
+# ── The agent ─────────────────────────────────────────────────────────
+[agents.rigpay]
+channels = ["telegram.default"]
+model_provider = "anthropic.default"
+risk_profile = "operator"
+skill_bundles = ["rigpay"]

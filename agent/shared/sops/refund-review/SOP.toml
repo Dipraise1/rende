@@ -1,0 +1,12 @@
+[sop]
+name = "refund-review"
+description = "When paid jobs failed, hold a human approval checkpoint before any refund proposal exists"
+version = "1.0.0"
+max_concurrent = 1
+admission_policy = "hold"
+max_pending_approvals = 4
+agent = "rigpay"
+
+[[triggers]]
+type = "cron"
+expression = "0 */4 * * *"   # check the flag queue every 4 hours

@@ -1,0 +1,11 @@
+[sop]
+name = "daily-reconciliation"
+description = "Fetch the gateway's shaped daily report and post the summary to the operator channel"
+version = "1.0.0"
+max_concurrent = 1
+admission_policy = "coalesce"
+agent = "rigpay"
+
+[[triggers]]
+type = "cron"
+expression = "0 21 * * *"   # 21:00 local, every day

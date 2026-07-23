@@ -46,14 +46,16 @@ is the single source of truth for where the project stands.
 - [ ] Point `services.toml` at a real receive address, pay a quote with a real
   wallet, confirm paid path end-to-end (verify → dispatch → ledger → report)
 
-### 2. ZeroClaw agent (`agent/`) — the other half of the product
-- [ ] Install ZeroClaw release binary; base agent on **Telegram channel**
-- [ ] Skill: rigpay operator — answer "how's business", read `/report/today`,
-  explain quotes/services to customers
-- [ ] SOP: daily reconciliation cron → post summary to operator chat
-- [ ] SOP: refund review — when `refund_review` is non-empty, open an
-  **approval checkpoint**; a human approves before any refund is proposed
-- [ ] Memory: client history, pricing notes, rig availability
+### 2. ZeroClaw agent (`agent/`) — authored, needs live install
+- [x] Full composition authored **against real ZeroClaw master schema (v3)**:
+  `config.example.toml` (Telegram channel, least-privilege http_request
+  allowlisted to the gateway only, web_fetch off, shell excluded), operator
+  skill, daily-reconciliation SOP (cron 21:00), refund-review SOP (cron 4h +
+  `kind: checkpoint` human approval gate), AGENTS.md injection posture,
+  install guide in `agent/README.md`
+- [ ] Install ZeroClaw release binary locally, create the Telegram bot, run
+  `zeroclaw sop validate`, and shake out config drift against the live daemon
+- [ ] Memory: client history, pricing notes, rig availability (after live install)
 
 ### 3. Wire the real rigs (reference deployment — "are YOU running it")
 - [ ] Gaming PC / R720: Ollama (or SD) behind `gpu_infer.sh` via the rig tunnel
