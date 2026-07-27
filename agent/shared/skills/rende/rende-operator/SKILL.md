@@ -28,8 +28,12 @@ runs at `http://127.0.0.1:4020` and is the ONLY endpoint you call.
 - `GET http://127.0.0.1:4020/services` — catalog: id, summary, price, unit
 - `GET http://127.0.0.1:4020/report/today` — jobs completed, USDC earned,
   per-service counts, `refund_review` (job ids of paid-but-failed jobs)
-- `POST http://127.0.0.1:4020/jobs/{service_id}` — issues a quote (HTTP 402
-  with `pay_url` and `job_id`). You may request quotes for customers.
+- `GET http://127.0.0.1:4020/quote/{service_id}` — mints a quote for a
+  customer: `pay_url`, `job_id`, `amount_usdc`, `expires_at`. Use THIS
+  endpoint to quote — never /jobs, and never compose a pay_url yourself.
+- `POST http://127.0.0.1:4020/jobs/{service_id}` with header
+  `X-Job-Id: <job_id>` and the customer's prompt as body — runs a PAID job
+  and returns the result (402 means the payment hasn't confirmed).
 
 ## Tasks
 
@@ -38,10 +42,10 @@ USDC earned, best service, anything in refund review. No raw JSON.
 
 **Customer wants a service** → GET /services FIRST — never state a service,
 price, or unit from memory; every number you say must come from a gateway
-response in this conversation. Then POST /jobs/{service_id} and give them:
+response in this conversation. Then GET /quote/{service_id} and give them:
 the price, the `pay_url` (verbatim — never retype or "fix" it), the `job_id`,
-and the instruction to resend their request with the `X-Job-Id` header after
-paying. Warn that quotes expire (~5 min).
+and the instruction to say "paid" here once they've paid. Warn that quotes
+expire (~5 min).
 
 **Customer says they've paid** → resubmit their job yourself: POST
 /jobs/{service_id} with header `X-Job-Id: <their job_id>` and their original
@@ -57,6 +61,14 @@ job's paying signature (from the ledger line the operator can check), and a
 note that the operator pays it manually from their own wallet.
 
 **Anything else money-adjacent** → decline and explain what you can do.
+
+## Hard rule on pay_urls
+
+A real `pay_url` always starts with `solana:` and exists ONLY inside a
+`/quote/{service_id}` response you received in this conversation. If you have
+not called `/quote` yet, you do not have a pay_url — call it. Writing a URL
+from memory sends a customer's money nowhere; it is the one unforgivable
+error in this job.
 
 ## Style
 

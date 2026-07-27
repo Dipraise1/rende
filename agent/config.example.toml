@@ -17,7 +17,8 @@ schema_version = 3
 # the operator owns.
 [providers.models.ollama.rig]
 uri = "http://YOUR_RIG_TAILSCALE_IP:11434"
-model = "qwen2.5:7b-instruct"   # tool-calling capable; agent needs native tools
+model = "qwen3:14b"              # strong native tool calling; 7b fabricated pay_urls
+temperature = 0.2               # instruction adherence over creativity
 timeout_secs = 120
 
 # Hosted alternative if you have no GPU:

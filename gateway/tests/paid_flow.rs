@@ -155,6 +155,39 @@ async fn full_x402_flow_unpaid_then_paid() {
 }
 
 #[tokio::test]
+async fn agent_quote_endpoint_returns_200_and_pays_like_402_quote() {
+    let paid = Arc::new(AtomicBool::new(false));
+    let rpc_url = serve(mock_rpc(paid.clone())).await;
+    let data_dir = std::env::temp_dir().join(format!("rende-q-{}", std::process::id()));
+    let (router, _app) =
+        server::build(test_config(&rpc_url, &data_dir.to_string_lossy())).unwrap();
+    let base = serve(router).await;
+    let http = reqwest::Client::new();
+
+    // Same quote as the 402 flow, but 200 so agent HTTP tools surface the body.
+    let resp = http.post(format!("{base}/quote/echo")).send().await.unwrap();
+    assert_eq!(resp.status(), 200);
+    let quote: Value = resp.json().await.unwrap();
+    assert_eq!(quote["status"], "payment_required");
+    let job_id = quote["job_id"].as_str().unwrap().to_string();
+    assert!(quote["pay_url"].as_str().unwrap().starts_with("solana:"));
+
+    // The minted job id is honored by the paid path.
+    paid.store(true, Ordering::SeqCst);
+    let resp = http
+        .post(format!("{base}/jobs/echo"))
+        .header("X-Job-Id", &job_id)
+        .body("via agent quote")
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), 200);
+
+    let resp = http.get(format!("{base}/quote/nope")).send().await.unwrap();
+    assert_eq!(resp.status(), 404);
+}
+
+#[tokio::test]
 async fn unknown_service_and_unknown_job_rejected() {
     let paid = Arc::new(AtomicBool::new(false));
     let rpc_url = serve(mock_rpc(paid)).await;

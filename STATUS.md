@@ -62,9 +62,12 @@ is the single source of truth for where the project stands.
   local models grab ambient tools (`ask_user`, `channel_room`) instead of
   `http_request` — `allowed_tools` now pins the surface to
   `http_request` + memory; skill hardened to never price from memory
-- [ ] Model upgrade for quote reliability: 7b answers report/catalog questions
-  correctly but fabricates pay_urls instead of POSTing quotes; qwen3:14b
-  pulling on the rig (fits the 5080), re-verify quote flow on it
+- [x] Model upgrade: qwen3:14b on the rig (temperature 0.2). Root cause of
+  fabricated pay_urls was NOT just the model — ZeroClaw's http_request tool
+  swallows non-2xx response bodies, so the 402 quote never reached the model.
+  Gateway grew `GET/POST /quote/{service_id}` (same quote, HTTP 200); skill
+  updated; 17/17 tests. Quote flow now 3/3 with real pay_urls; injection
+  probe cleanly refused and reported
 - [ ] Memory: client history, pricing notes, rig availability (after live install)
 
 ### 3. Wire the real rigs (reference deployment — "are YOU running it")

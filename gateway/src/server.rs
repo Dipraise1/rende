@@ -71,6 +71,7 @@ pub fn build(cfg: config::Config) -> anyhow::Result<(Router, Arc<App>)> {
         .route("/healthz", get(|| async { "ok" }))
         .route("/services", get(services))
         .route("/jobs/{service_id}", post(jobs))
+        .route("/quote/{service_id}", get(quote_ok).post(quote_ok))
         .route("/report/today", get(report_today))
         .layer(DefaultBodyLimit::max(max_body))
         .with_state(app.clone());
@@ -129,6 +130,24 @@ async fn jobs(
         return issue_quote(&app, &service);
     };
     execute_paid(&app, &service, &job_id, &body).await
+}
+
+/// Agent-friendly quote endpoint: identical quote to the 402 flow, but
+/// returned as HTTP 200 — agent HTTP tools (ZeroClaw's http_request among
+/// them) surface only the status text on non-2xx responses, which hides the
+/// pay_url from the model. The x402 402 on /jobs stays for machine clients.
+async fn quote_ok(
+    State(app): State<Arc<App>>,
+    UrlPath(service_id): UrlPath<String>,
+) -> Response {
+    let Some(service) = app.cfg.service(&service_id).cloned() else {
+        return err(StatusCode::NOT_FOUND, "unknown service");
+    };
+    let mut resp = issue_quote(&app, &service);
+    if resp.status() == StatusCode::PAYMENT_REQUIRED {
+        *resp.status_mut() = StatusCode::OK;
+    }
+    resp
 }
 
 /// Phase 1: mint a quote with a fresh single-use reference key.
