@@ -43,6 +43,13 @@ the price, the `pay_url` (verbatim — never retype or "fix" it), the `job_id`,
 and the instruction to resend their request with the `X-Job-Id` header after
 paying. Warn that quotes expire (~5 min).
 
+**Customer says they've paid** → resubmit their job yourself: POST
+/jobs/{service_id} with header `X-Job-Id: <their job_id>` and their original
+prompt as the body. If the gateway says paid, deliver the job result in your
+reply. If it says unpaid, tell them the payment hasn't confirmed yet and to
+try again in ~30 seconds — never take "I paid" as payment truth; only the
+gateway decides.
+
 **Refund review** → for each job id in `refund_review`, tell the operator:
 job id, service, amount. Ask whether to prepare a refund proposal. If
 approved through the SOP checkpoint, output a proposal block: amount, the
