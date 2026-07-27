@@ -18,6 +18,9 @@ schema_version = 3
 [providers.models.ollama.rig]
 uri = "http://YOUR_RIG_TAILSCALE_IP:11434"
 model = "qwen3:14b"              # strong native tool calling; 7b fabricated pay_urls
+# Sharing the GPU with another model? qwen3:8b also passes the full flow
+# (with this repo's /quote endpoint + pinned tool surface) and coexists
+# with a ~7GB neighbor in 16GB VRAM.
 temperature = 0.2               # instruction adherence over creativity
 timeout_secs = 120
 
