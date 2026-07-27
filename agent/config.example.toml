@@ -33,7 +33,11 @@ timeout_secs = 120
 level = "supervised"
 require_approval_for_medium_risk = true
 block_high_risk_commands = true
-excluded_tools = ["shell"]
+excluded_tools = ["shell", "ask_user"]
+# Small local models grab plausible-sounding ambient tools (ask_user,
+# channel_room) instead of http_request — pin the surface to exactly what the
+# skill needs. This is also the least-privilege posture the threat model claims.
+allowed_tools = ["http_request", "memory_recall", "memory_store"]
 
 # ── Memory ────────────────────────────────────────────────────────────
 [memory]

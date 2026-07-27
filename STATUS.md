@@ -43,18 +43,28 @@ is the single source of truth for where the project stands.
 ## 🚧 Left to build
 
 ### 1. Real-payment test (next, blocks everything downstream)
-- [ ] Point `services.toml` at a real receive address, pay a quote with a real
-  wallet, confirm paid path end-to-end (verify → dispatch → ledger → report)
+- [x] `services.toml` pointed at the operator's real receive address; gateway
+  restarted, quote smoke-tested (`demo/quote_qr.sh` renders the Solana Pay QR)
+- [ ] Pay a quote with a real wallet, confirm paid path end-to-end
+  (verify → dispatch → ledger → report) — this is the video take
 
-### 2. ZeroClaw agent (`agent/`) — authored, needs live install
+### 2. ZeroClaw agent (`agent/`) — LIVE, end-to-end verified
 - [x] Full composition authored **against real ZeroClaw master schema (v3)**:
   `config.example.toml` (Telegram channel, least-privilege http_request
   allowlisted to the gateway only, web_fetch off, shell excluded), operator
   skill, daily-reconciliation SOP (cron 21:00), refund-review SOP (cron 4h +
   `kind: checkpoint` human approval gate), AGENTS.md injection posture,
   install guide in `agent/README.md`
-- [ ] Install ZeroClaw release binary locally, create the Telegram bot, run
-  `zeroclaw sop validate`, and shake out config drift against the live daemon
+- [x] Installed ZeroClaw v0.8.3, SOPs validate, Telegram bot wired, daemon runs
+- [x] **Agent → gateway loop works live**: "How's business?" → real
+  `/report/today` numbers, ~7 s round trip on the rig's qwen2.5:7b
+- [x] Tool-surface fix (the old 1200 s timeout / phantom-denial bug): small
+  local models grab ambient tools (`ask_user`, `channel_room`) instead of
+  `http_request` — `allowed_tools` now pins the surface to
+  `http_request` + memory; skill hardened to never price from memory
+- [ ] Model upgrade for quote reliability: 7b answers report/catalog questions
+  correctly but fabricates pay_urls instead of POSTing quotes; qwen3:14b
+  pulling on the rig (fits the 5080), re-verify quote flow on it
 - [ ] Memory: client history, pricing notes, rig availability (after live install)
 
 ### 3. Wire the real rigs (reference deployment — "are YOU running it")
